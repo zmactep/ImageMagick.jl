@@ -4,8 +4,8 @@ using BinDeps
 
 mpath = get(ENV, "MAGICK_HOME", "") # If MAGICK_HOME is defined, add to library search path
 if !isempty(mpath)
-    push!(DL_LOAD_PATH, mpath)
-    push!(DL_LOAD_PATH, joinpath(mpath,"lib"))
+    push!(Base.DL_LOAD_PATH, mpath)
+    push!(Base.DL_LOAD_PATH, joinpath(mpath,"lib"))
 end
 libnames    = ["libMagickWand", "CORE_RL_wand_"]
 suffixes    = ["", "-Q16", "-6.Q16", "-Q8"]
@@ -70,23 +70,6 @@ init_deps()
             end
         end),
         libwand, os = :Windows, unpacked_dir = magick_libdir, preload = initfun)
-end
-
-@osx_only begin
-    if Pkg.installed("Homebrew") === nothing
-        error("Homebrew package not installed, please run Pkg.add(\"Homebrew\")")
-    end
-    using Homebrew
-    initfun =
-"""
-function init_deps()
-    ENV["MAGICK_CONFIGURE_PATH"] = joinpath("$(Homebrew.prefix("imagemagick"))","lib","ImageMagick","config-Q16")
-    ENV["MAGICK_CODER_MODULE_PATH"] = joinpath("$(Homebrew.prefix("imagemagick"))", "lib","ImageMagick","modules-Q16","coders")
-    ENV["PATH"] = joinpath("$(Homebrew.prefix("imagemagick"))", "bin") * ":" * ENV["PATH"]
-    ccall((:MagickWandGenesis,libwand), Void, ())
-end
-"""
-    provides( Homebrew.HB, "imagemagick", libwand, os = :Darwin, preload = initfun, onload="init_deps()")
 end
 
 @BinDeps.install Dict([(:libwand, :libwand)])
